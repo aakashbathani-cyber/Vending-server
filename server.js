@@ -6,13 +6,13 @@ app.use(express.json());
 // 🔹 QR-ID → MACHINE NAME MAP
 const qrToMachineMap = {
   "qr_SESBTTiE4fR82a": "JUICE_001",
-  "qr_SE3cIiyla9BguG": "JUICE_002"
+  //"qr_SE3cIiyla9BguG": "JUICE_002"
 };
 
 // Machine command store
 let machineCommands = {
   JUICE_001: "IDLE",
-  JUICE_002: "IDLE"
+  //JUICE_002: "IDLE"
 };
 
 // Root check
@@ -51,6 +51,7 @@ app.get("/command", (req, res) => {
 app.listen(process.env.PORT || 3000, () => {
   console.log("🚀 Static QR vending server running");
 });
+
 
 
 
