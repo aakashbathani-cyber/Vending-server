@@ -1,16 +1,20 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
 
 // Machine command store
 let machineCommands = {
   JUICE_001: "IDLE",
-  //JUICE_002: "IDLE",
+  // JUICE_002: "IDLE",
 };
 
-// Webhook
+// Root check (Render health)
+app.get("/", (req, res) => {
+  res.send("Vending Server Running OK");
+});
+
+// Razorpay webhook
 app.post("/payment", (req, res) => {
   const qrName =
     req.body?.payload?.payment?.entity?.notes?.qr_name ||
@@ -39,8 +43,10 @@ app.get("/command", (req, res) => {
   res.send(cmd);
 });
 
+// Render port
 app.listen(process.env.PORT || 3000, () => {
   console.log("🚀 Static QR vending server running");
 });
+
 
 
