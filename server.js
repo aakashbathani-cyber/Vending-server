@@ -4,15 +4,23 @@ const bodyParser = require("body-parser");
 const app = express();
 app.use(bodyParser.json());
 
-let command = "IDLE";
+// Machine command store
+let machineCommands = {
+  JUICE_001: "IDLE",
+  JUICE_002: "IDLE",
+};
 
-// Razorpay webhook
+// Webhook
 app.post("/payment", (req, res) => {
-  console.log("💰 Payment received");
+  const qrName =
+    req.body?.payload?.payment?.entity?.notes?.qr_name ||
+    req.body?.payload?.payment?.entity?.qr_code_id;
 
-  if (req.body.event === "payment.captured") {
-    command = "START";
-    console.log("✅ START machine");
+  console.log("💰 Payment from QR:", qrName);
+
+  if (machineCommands[qrName] !== undefined) {
+    machineCommands[qrName] = "START";
+    console.log("✅ START machine:", qrName);
   }
 
   res.send("OK");
@@ -20,15 +28,18 @@ app.post("/payment", (req, res) => {
 
 // ESP32 polling
 app.get("/command", (req, res) => {
-  res.send(command);
-  command = "IDLE";
+  const machineId = req.query.machine_id;
+
+  if (!machineCommands[machineId]) {
+    return res.send("IDLE");
+  }
+
+  const cmd = machineCommands[machineId];
+  machineCommands[machineId] = "IDLE";
+  res.send(cmd);
 });
 
-app.get("/", (req, res) => {
-  res.send("Vending server running");
+app.listen(process.env.PORT || 3000, () => {
+  console.log("🚀 Static QR vending server running");
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
-});
