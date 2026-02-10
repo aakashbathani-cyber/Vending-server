@@ -1,30 +1,38 @@
 const express = require("express");
-
 const app = express();
+
 app.use(express.json());
+
+// 🔹 QR-ID → MACHINE NAME MAP
+const qrToMachineMap = {
+  "qr_SESBTTiE4fR82a": "JUICE_001",
+  "qr_SE3cIiyla9BguG": "JUICE_002"
+};
 
 // Machine command store
 let machineCommands = {
   JUICE_001: "IDLE",
-  // JUICE_002: "IDLE",
+  JUICE_002: "IDLE"
 };
 
-// Root check (Render health)
+// Root check
 app.get("/", (req, res) => {
   res.send("Vending Server Running OK");
 });
 
 // Razorpay webhook
 app.post("/payment", (req, res) => {
-  const qrName =
-    req.body?.payload?.payment?.entity?.notes?.qr_name ||
-    req.body?.payload?.payment?.entity?.qr_code_id;
+  const qrId = req.body?.payload?.payment?.entity?.qr_code_id;
 
-  console.log("💰 Payment from QR:", qrName);
+  console.log("💰 Payment from QR ID:", qrId);
 
-  if (machineCommands[qrName] !== undefined) {
-    machineCommands[qrName] = "START";
-    console.log("✅ START machine:", qrName);
+  const machineName = qrToMachineMap[qrId];
+
+  if (machineName && machineCommands[machineName] !== undefined) {
+    machineCommands[machineName] = "START";
+    console.log("✅ START machine:", machineName);
+  } else {
+    console.log("❌ Unknown QR ID");
   }
 
   res.send("OK");
@@ -34,19 +42,16 @@ app.post("/payment", (req, res) => {
 app.get("/command", (req, res) => {
   const machineId = req.query.machine_id;
 
-  if (!machineCommands[machineId]) {
-    return res.send("IDLE");
-  }
-
-  const cmd = machineCommands[machineId];
+  const cmd = machineCommands[machineId] || "IDLE";
   machineCommands[machineId] = "IDLE";
+
   res.send(cmd);
 });
 
-// Render port
 app.listen(process.env.PORT || 3000, () => {
   console.log("🚀 Static QR vending server running");
 });
+
 
 
 
